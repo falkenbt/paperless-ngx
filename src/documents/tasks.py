@@ -39,6 +39,7 @@ from documents.plugin import ProgressManager
 from documents.plugin import ProgressStatusOptions
 from documents.plugin import StopConsumeTaskError
 from documents.sanity_checker import SanityCheckFailedException
+from documents.signals import document_updated
 
 if settings.AUDIT_LOG_ENABLED:
     import json
@@ -182,6 +183,11 @@ def bulk_update_documents(document_ids):
     ix = index.open_index()
 
     for doc in documents:
+        document_updated.send(
+            sender=None,
+            document=doc,
+            logging_group=uuid.uuid4(),
+        )
         post_save.send(Document, instance=doc, created=False)
 
     with AsyncWriter(ix) as writer:
